@@ -25,3 +25,6 @@ print(tea)                  # {'Name': 'Tieguanyin', 'Color': 'oolong', 'Price':
 tea['Price'] += 5
 del tea['Color']
 print(tea)                  # {'Name': 'Tieguanyin', 'Price': 15, 'country': 'China'}
+
+for v, k in tea.items():
+        print(str(v)+": "+str(k))       # Name: Tieguanyin \n Price: 15 \n country: China
