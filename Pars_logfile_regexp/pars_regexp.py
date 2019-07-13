@@ -32,9 +32,3 @@ for i,item in enumerate(x):
 #print(x)
 
 f.close()
-
-'''
-str1 = '2019-05-26 12:37:01.360 11712:212 INFO: Service update version: 19.4.2.702 (wWinMain:122)'
-y = re.search(r'(\d*\.\d*){3}',str1)
-print(y[0])
-'''
