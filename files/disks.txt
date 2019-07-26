@@ -1,0 +1,5 @@
+C:\ClusterStorage\Volume1\V-VM01\v-vm01.vhdx	10
+C:\ClusterStorage\Volume2\V-VM02\v-vm02.vhd	12
+C:\ClusterStorage\Volume1\V-VM03\v-vm03.vhdx    8
+C:\ClusterStorage\Volume2\SharedVolume\V-VM04\v-vm04.vhdx  17
+C:\ClusterStorage\Volume1\Shared Volumes\V-New-VM05\v-new-vm05.vhdx 30 
