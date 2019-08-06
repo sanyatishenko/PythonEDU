@@ -1,0 +1,17 @@
+Cluster;Host;VM;CPU;RAM
+c-clu1-mgt;s-clu1-01;V-ADDS01;4;8
+c-clu1-mgt;s-clu1-02;V-PKI01;4;8
+c-clu1-mgt;s-clu1-01;V-DHCP01;4;8
+c-clu1-mgt;s-clu1-02;V-PROXY01;4;8
+c-clu1-mgt;s-clu1-03;V-MAIL01;8;32
+c-clu1-mgt;s-clu1-03;V-FARM01;16;64
+c-clu1-mgt;s-clu1-03;V-FS01;4;8
+c-clu2-mgt;s-clu2-01;V-ADDS02;4;8
+c-clu2-mgt;s-clu2-01;V-PKI02;4;8
+c-clu2-mgt;s-clu2-01;V-DHCP02;4;8
+c-clu2-mgt;s-clu2-02;V-PROXY02;4;8
+c-clu2-mgt;s-clu2-02;V-MAIL02;8;16
+c-clu2-mgt;s-clu2-03;V-FARM02;16;64
+c-clu2-mgt;s-clu2-03;V-FS02;4;8
+c-clu2-mgt;s-clu2-03;V-DEV01;32;96
+c-clu2-mgt;s-clu2-03;V-DEV02;16;64
