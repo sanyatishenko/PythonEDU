@@ -52,7 +52,7 @@ result=[]
 for p in path:
     l = path_len(m,p)
     result += [{'Len':l,'Path':p}]
-    if len(result) > 200:
+    if len(result) > 20000:
        sort_res = sorted(result,key=lambda k:k['Len'])
        result = sort_res[:pr]
 
