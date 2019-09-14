@@ -1,6 +1,8 @@
 import requests  
 import re  
 import sqlite3
+import time
+import os
 
 def get_html(url):  
     '''Make request with URL, headers and 5 sec timeout  
@@ -32,47 +34,99 @@ def get_posts(html):
     regexp = r'<a href=\"(?P<link>/.+)\">.*<h1 class=\"blog\">(?P<title>.+)<\/h1>.+>(?P<date>.+)</span>' 
     return([match.groupdict() for match in re.finditer(regexp,html)])
 
-
-title_list = []                                     
-for i in range(1,3):                              
-        url = f'https://www.vmgu.ru/news/all/{i}' 
-        html = get_html(url)                      
-        title_list += get_posts(html)
-                                                  
-
-
-connection = sqlite3.connect('vmguru.db')
-cursor = connection.cursor()
-create_table_news = (r'CREATE TABLE IF NOT EXISTS news('
-r'id INTEGER PRIMARY KEY,'
-r'link text,'
-r'title text,'
-r'post_date DATE,'
-r'add_time DATE)')
-
-cursor.execute(create_table_news)
-
-for row in title_list:
-	query = '''INSERT INTO news (link,title,post_date,add_time)
-		   VALUES(:link,:title,:date,datetime('now'))'''
-	row['date'] = '{}-{}-{}'.format(row['date'][6:],row['date'][3:5],row['date'][0:2])
-	connection.execute(query,row)
+def red_last_news(count):
+	title_list = []
+	sleep = 2
+	for i in range(1,count):                              
+		url = f'https://www.vmgu.ru/news/all/{i}' 
+		html = get_html(url)                      
+		title_list += get_posts(html)
+		time.sleep(sleep)
+	return(title_list)
 
 
-connection.commit()
-connection.close()
+# Выполняем скрипт создания БД из файла схемы                            
+def create_db(dbname,file_schema):
+	'''create database and tables'''
+	connection = sqlite3.connect(dbname) 
+	with open(file_schema,'r') as f:
+		schema = f.read()
+		connection.executescript(schema)
+	connection.commit() 
+	connection.close()
 
-# datetime('now')
+
+
+def add_posts(dbname,title_list):
+	insert_query = '''INSERT INTO news (link,title,post_date,add_time) 
+			  VALUES(:link,:title,:date,datetime('now'))'''   
+	select_query = '''SELECT * FROM news WHERE link = :link'''        
+	connection = sqlite3.connect(dbname)
+	cursor = connection.cursor()
+	add_news = []
+	for row in title_list:
+		row['date'] = '{}-{}-{}'.format(row['date'][6:],row['date'][3:5],row['date'][0:2])
+		row['link'] = f'https://vmgu.ru{row["link"]}'                       
+		result = cursor.execute(select_query,row)
+		result = cursor.fetchone()
+		if not result:
+			connection.execute(insert_query,row)
+			add_news += row
+	return(add_news)
+
+
+# Проверка существование базы данных
+# Если базы нет, ищем файл схемы и создаем БД
+def check_db(db_file,schema_file):
+	'''Function check DB. If all OK return 0, if DB created 1, if error 10'''
+	print('Begin check DB ...')
+	db_exists = os.path.exists(db_file)
+	if not db_exists:
+		print('DB {} not exists.'.format(db_file))
+		schema_exists = os.path.exists(schema_file)
+		if not schema_exists:
+			print('Error! DB {} and schema {} files not exists!'.format(db_file,schema_file))
+			return(10)
+		else:
+			print('Create DB {} from schema {}...'.format(db_file,schema_file))
+			create_db(db_file,schema_file)
+			return(1)
+	prin('End check DB: DB - exists!')
+	return(0)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 
 '''
-title_list=[]
-for i in range(1,6):
-	url = f'https://www.vmgu.ru/news/all/{i}'  
-	html = get_html(url)
-	title_list+=get_posts(html) 
+# Проверяем существование таблицы
+def check_tables(db_file):
+	'Function check tables in DB'
+	print('Test connection to DB: {}'.format(db_file))
+	connection = sqlite3.connect(db_file)
+	cursor = connection.cursor()
+	check_query = "SELECT name FROM sqlite_master WHERE type='table' AND name = 'news'"
+	result = cursor.execute(check_query)
+	result = cursor.fetchone()
+	if not result:
+		print('Error! Table "news" not found in DB {} !!!'.format(db_file))
+		return(10)
+	else:
+		print('All OK!')
+		return(0)
 
-print('title list len:',len(title_list))
+
 '''
