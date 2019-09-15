@@ -1,8 +1,12 @@
+#! /usr/bin/env python3.6
+
 import requests  
 import re  
 import sqlite3
 import time
 import os
+import sys
+
 
 def get_html(url):  
     '''Make request with URL, headers and 5 sec timeout  
@@ -20,24 +24,28 @@ def get_html(url):
     else:  
         return 0  
 
-
+# Возвращает число страниц новостей на сайте
 def get_last_page(html):  
     '''find <a>-tag for last page with text &gt;&gt; and return number of last page        requared import modules: re'''  
     regexp = r'<a.+?(\d+)\">&gt;&gt;<\/a>'  
     match = re.search(regexp,html)  
-    return(match[1])
+    return(int(match[1]))
 
-  
+
+# Нахожит в HTML коде заголовки постов и возвращает в виде списка словарей с сылкой, заголовком и датой публикации
 def get_posts(html): 
     '''function return all posts in html page 
        requared import modules: re''' 
     regexp = r'<a href=\"(?P<link>/.+)\">.*<h1 class=\"blog\">(?P<title>.+)<\/h1>.+>(?P<date>.+)</span>' 
     return([match.groupdict() for match in re.finditer(regexp,html)])
 
+
+# Считывает указаное количество страниц сайта 
+# и возвращает список словарей с сылкой, заголовком и датой публикации
 def red_last_news(count):
 	title_list = []
 	sleep = 2
-	for i in range(1,count):                              
+	for i in range(1,count+1):                              
 		url = f'https://www.vmgu.ru/news/all/{i}' 
 		html = get_html(url)                      
 		title_list += get_posts(html)
@@ -57,6 +65,8 @@ def create_db(dbname,file_schema):
 
 
 
+# Добавляет из списка в БД посты котрые еще не добавлены в БД
+# возвращает список добавленных новостей
 def add_posts(dbname,title_list):
 	insert_query = '''INSERT INTO news (link,title,post_date,add_time) 
 			  VALUES(:link,:title,:date,datetime('now'))'''   
@@ -65,13 +75,16 @@ def add_posts(dbname,title_list):
 	cursor = connection.cursor()
 	add_news = []
 	for row in title_list:
+		# Приводим ссылку и дату публикации в нужный формат
 		row['date'] = '{}-{}-{}'.format(row['date'][6:],row['date'][3:5],row['date'][0:2])
 		row['link'] = f'https://vmgu.ru{row["link"]}'                       
 		result = cursor.execute(select_query,row)
 		result = cursor.fetchone()
 		if not result:
 			connection.execute(insert_query,row)
-			add_news += row
+			add_news.append(row)
+	connection.commit()
+	connection.close()
 	return(add_news)
 
 
@@ -91,21 +104,35 @@ def check_db(db_file,schema_file):
 			print('Create DB {} from schema {}...'.format(db_file,schema_file))
 			create_db(db_file,schema_file)
 			return(1)
-	prin('End check DB: DB - exists!')
+	print('End check DB: DB - exists!')
 	return(0)
 
 
 
+if __name__ == '__main__':
+	dbname = 'vmguru.db'
+	schema = 'schema.sql'
+	count = 2 # Число страниц на которых ищем последнии новости
+	mode  = check_db(dbname,schema)
+	if mode == 10:
+		print('Database Error!')
+		sys.exit(10)
+	elif mode == 1:
+		# Режим создания базы - вычетка всех постов
+		url = f'https://www.vmgu.ru/news'
+		html = get_html(url)
+		count = get_last_page(html)
+		print(count)
+	elif mode == 0:
+		# Режим отслеживания новых постов
+		pass
+	else:
+		print('Error! Unknowe mode.')
+		sys.exit(10)
 
-
-
-
-
-
-
-
-
-
+	title_list = red_last_news(count)
+	add_news = add_posts(dbname,title_list)
+	print('Add news count:',len(add_news))
 
 
 
